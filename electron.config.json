@@ -1,0 +1,42 @@
+// 这里是electron-builder的配置
+{
+  "files": [
+    "main.js",
+    "preload.js",
+    "menu.js",
+    "./dist"
+  ],
+  "productName": "vitedemo", //项目名 这也是生成的exe文件的前缀名
+  "appId": "com.vitedemo.www", //包名  
+  "copyright": "reimen", //版权  信息
+  "directories": { // 输出文件夹
+    "output": "./build"
+  },
+  "nsis": {
+    "oneClick": false, // 是否一键安装
+    "allowElevation": true, // 允许请求提升。 如果为false，则用户必须使用提升的权限重新启动安装程序。
+    "allowToChangeInstallationDirectory": true, // 允许修改安装目录
+    "installerIcon": "./appLaunch/icons/install.ico", // 安装图标
+    "uninstallerIcon": "./appLaunch/icons/uninstall.ico", //卸载图标
+    "installerHeaderIcon": "./appLaunch/icons/installerHeader.ico", // 安装时头部图标
+    "createDesktopShortcut": true, // 创建桌面图标
+    "createStartMenuShortcut": true, // 创建开始菜单图标
+    "shortcutName": "icon", // 图标名称
+    // "include": "build/script/installer.nsh", // 包含的自定义nsis脚本
+  },
+  // windows相关的配置
+  "win": {
+    "icon": "./appLaunch/icons/install.ico", //图标路径 
+    "target": [
+      {
+        "target": "nsis" // 我们要的目标安装包
+      }
+    ]
+  },
+  // "mac": { // mac
+  //   "icon": "appLaunch/icons/icon.icns"
+  // },
+  // "linux": { // linux
+  //   "icon": "appLaunch/icons"
+  // }
+}
