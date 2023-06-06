@@ -24,12 +24,12 @@ async function request (api, params = {}, config = {}) {
   api = JSON.parse(JSON.stringify(api))
 
   // ECirculation项目特有逻辑
-  if (configProject.projectName === 'ECirculation') params = { pageSize: 20, token: headers && headers.token, ...params }
+  if (['ECirculation', 'sunshine'].includes(configProject.projectName)) params = { pageSize: 20, token: headers && headers.token, ...params }
   let apiName = api.url.split('/').slice(-1).join()
   let _host = configProject.urlApi
   // if(this.libs.data.getStorage('proxy')) _host = this.libs.data.getStorage('proxy')
   let _group = api.group ? configProject.apiGroup[api.group] : ''
-  let _keyValue = utils.object.paramsToKeyValue(params)
+  // let _keyValue = utils.object.paramsToKeyValue(params)
   let url = _host + _group + api.url // + '?' + encodeURI(_keyValue)
   if (api.url.startsWith('http')) url = api.url
   // if (url.length > 1024) {
@@ -63,7 +63,13 @@ async function request (api, params = {}, config = {}) {
   let errRes, dataRes, respondseError
   if (configProject.framework === 'uni') {
     console.log('uni请求')
-    if (api.dataType === 'keyValue') url += '?' + encodeURI(_keyValue)
+    if (api.dataType === 'keyValue') {
+      let _params = {}
+      for (let n in params) _params[n] = encodeURIComponent(params[n])
+      let _keyValue = utils.object.paramsToKeyValue(_params)
+      url += '?' + _keyValue
+      // url += '?' + encodeURI(_keyValue)
+    }
     toast = title => uni.showToast({ title, icon: 'none', duration: 2000 })
     let [_errRes, _dataRes] = await uni.request({ ...api, url, data, ...config, header, sslVerify: false })
     errRes = _errRes
@@ -85,23 +91,29 @@ async function request (api, params = {}, config = {}) {
   dataRes = dataRes || {}
   let _data = {}
   try {
-    _data = JSON.parse(dataRes.data)
+    _data = JSON.parse(dataRes.data) || {}
   } catch (e) {
-    _data = dataRes.data
+    _data = dataRes.data || {}
   }
 
+  console.log(time, '请求结果', url, _data)
   let statusCode = dataRes.statusCode || dataRes.status
   let errorMessage = dataRes.errorMessage || ''
   // 一般失败请求处理
-  if (errRes) return toastBox(apiName + '请求无效' + respondseError + time, { ...api, url, data, ...config }, dataRes)
+  if (errRes) {
+    toastBox(apiName + '请求无效' + respondseError + time, { ...api, url, data, ...config }, dataRes)
+    return _data
+  }
   // 有些网络层拦截错误在返回的数据里面
-  if (!validateStatus(statusCode)) return toastBox(apiName + '请求失败，' + statusCode + errorMessage + time, { ...api, url, data, ...config }, dataRes)
+  if (!validateStatus(statusCode)) {
+    toastBox(apiName + '请求失败，' + statusCode + errorMessage + time, { ...api, url, data, ...config }, dataRes)
+    return _data
+  }
 
   // 判断业务返回的错误
   if ((_data.code && (_data.code !== 0 && _data.code !== 200)) || (_data.statuscode && _data.statuscode !== '0000')) {
     toastBox('业务提示：' + (_data.msg || _data.statusmsg || _data.errorMessage) + time, apiName + (_data.code || _data.statuscode), { ...api, url, data, ...config }, dataRes)
   }
-  // console.log(time, '请求结果', url, _data)
   return _data
 }
 

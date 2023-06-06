@@ -195,7 +195,7 @@ let writePort = async command => {
 }
 
 // 监听蓝牙开关打开状态,自动开始监听，蓝牙状态改变会执行两次，后一次才是真实状态
-// #ifdef APP
+// #ifndef H5
 // vue框架项目无法使用#ifdef，因此要多加一层if判断
 if (project.framework === 'uni') {
   !(async function onBluetoothAdapterStateChange () {
@@ -234,7 +234,7 @@ BioStimBleModule.openBluetoothAdapter = async (autoInit = BioStimBleModule.autoI
   if (BioStimBleModule.autoInit !== autoInit) BioStimBleModule.autoInit = autoInit
   let { bleReady, bleOnline } = BioStimBleModule.bleState
   console.log('蓝牙状态', bleOnline, '服务状态', bleReady, '自启用', autoInit)
-  let res
+  let res = {}
   if (!bleOnline) res = { statusCode: 500, err: { errMsg: '客户端蓝牙未打开' } }
   if (bleReady) res = { statusCode: 200, err: { errMsg: '蓝牙服务已启用' } }
   if (bleOnline && !bleReady) res = await baseBleModule.openBluetoothAdapter()
@@ -265,6 +265,7 @@ BioStimBleModule.closeBluetoothAdapter = async () => {
  */
 BioStimBleModule.turnOnBluetoothSwitch = () => {
   showToast('您的蓝牙没有打开，请打开蓝牙')
+  // #ifdef APP-PLUS
   if (platform === 'ios') return plus.runtime.openURL(encodeURI('prefs:root=Bluetooth')) // 测试没有效果
   let main = plus.android.runtimeMainActivity()
   let Context = plus.android.importClass('android.content.Context')
@@ -274,6 +275,7 @@ BioStimBleModule.turnOnBluetoothSwitch = () => {
   plus.android.importClass(BAdapter) // 引入相关的method函数，这样之后才会有isEnabled函数支持
   if (BAdapter.isEnabled()) return
   BAdapter.enable()
+  // #endif
 }
 
 // 设置 排除搜索到的不需要显示的设备方法
@@ -455,7 +457,13 @@ BioStimBleModule.sendInitCmd = async (options, time) => {
   let MCommand = options.initCommand
   let MOptions = MCommand.split(',')
   // 6位是含有channel的指令
-  let channel = MOptions.length === 6 ? MOptions[1] : ''
+  // 7位是含有channel，output的指令
+  // DATA:m,<channel>,<output>,<PhaseNumber>,<LoopNumber>,<Time>,<Sum>\r\n\0
+  let channel = 5 < MOptions.length ? MOptions[1] : ''
+  if (MOptions.length === 7) {
+    MOptions.splice(2, 1)
+    MCommand = MOptions.join()
+  }
   await writePort(DeviceCmd.setWorkout({ command: MCommand, time }))
 
   // 阶段字段：ble使用workoutphaselist,优E康使用phaseList,痛经使用workoutPhaseList
@@ -504,7 +512,7 @@ BioStimBleModule.sendInitCmd = async (options, time) => {
   // 不保存方案：isSave等于0，planNo是1
   // 保存方案：isSave等于1，channel是1
   // 保存方案的需求还没确定
-  const canSave = ['consume', 'ECirculation'].includes(project.projectName)
+  const canSave = ['consume', 'ECirculation', 'sunshine', 'EMX'].includes(project.projectName)
   if (!canSave) {
     await writePort(DeviceCmd.setChannelEnd(channel))
     return
@@ -600,6 +608,13 @@ BioStimBleModule.pauseTreatment = ({ command, channel }) => {
 BioStimBleModule.endTreatment = async ({ command, channel }) => {
   await writePort(DeviceCmd.endTreatment(({ command, channel })))
   // await BioStimBleModule.closeBLEConnection()
+}
+
+/**
+ * 固件升级
+ */
+BioStimBleModule.firmwareReady = async ({ boardA, countA, lenA, boardB = 0, countB = 0, lenB = 0 }) => {
+  await writePort(DeviceCmd.firmwareReady(({ boardA, countA, lenA, boardB, countB, lenB })))
 }
 
 // 断开蓝牙连接

@@ -25,6 +25,11 @@ const mock = {
     // characteristicId: '0000ffb2-0000-1000-8000-00805f9b34fb'
     characteristicId: '0000FFB2-0000-1000-8000-00805F9B34FB'
   },
+  sunshine: { // 晨硕治疗仪
+    serviceId: '0000FFB0-0000-1000-8000-00805F9B34FB',
+    // characteristicId: '0000ffb2-0000-1000-8000-00805f9b34fb'
+    characteristicId: '0000FFB2-0000-1000-8000-00805F9B34FB'
+  },
   deviceApp: {
     serviceId: '0000FFB0-0000-1000-8000-00805F9B34FB',
     characteristicId: '0000ffb2-0000-1000-8000-00805f9b34fb'
@@ -35,11 +40,11 @@ const mock = {
   }
 }[project.projectName] || {}
 // 这里的 deviceId 需要已经通过 createBLEConnection 与对应设备建立连接
-let deviceId = ''
+let deviceId = BaseBleModule.deviceId = ''
 // 这里的 serviceId 需要已经通过 getBLEDeviceServices 与对应设备建立连接
-let serviceId = mock.serviceId //
+let serviceId = BaseBleModule.serviceId = mock.serviceId //
 // 这里的 characteristicId 需要已经通过 getBLEDeviceCharacteristics 与对应设备建立连接
-let characteristicId = mock.characteristicId
+let characteristicId = BaseBleModule.characteristicId = mock.characteristicId
 // 写入指令队列
 let commandArray = []
 let platform = typeof uni !== 'undefined' && uni.getSystemInfoSync().platform
@@ -89,6 +94,7 @@ BaseBleModule.bluetoothState = () => {
  */
 BaseBleModule.bluetoothOn = () => {
   return new Promise(resolve => {
+    // #ifdef APP-PLUS
     if (platform === 'ios') {
       plus.runtime.openURL(encodeURI('App-Prefs:root=Bluetooth')) // 未测试效果
       return resolve()
@@ -96,6 +102,7 @@ BaseBleModule.bluetoothOn = () => {
     let res = BAdapter.enable() // res 是用户的选择
     console.log('打开蓝牙：', res, BAdapter.isEnabled())
     resolve(res)
+    // #endif
   })
 }
 /**
@@ -163,7 +170,7 @@ BaseBleModule.stopBluetoothDevicesDiscovery = async () => {
 BaseBleModule.createBLEConnection = async _deviceId => {
   let [err, data] = await uni.createBLEConnection({ deviceId: _deviceId, timeout: BaseBleModule.connectTimeOut })
   if (err) console.error('createBLEConnection fail:', err)
-  if (!err) deviceId = _deviceId
+  if (!err) deviceId = BaseBleModule.deviceId = _deviceId
   return { statusCode: err ? 502 : 200, data, err }
 }
 
@@ -174,7 +181,7 @@ BaseBleModule.closeBLEConnection = async () => {
   // if (!deviceId) return { statusCode: 201, data: err, err }
   // if (err) return { statusCode: 521, err }
 
-  deviceId = ''
+  deviceId = BaseBleModule.deviceId = ''
   // deviceId = serviceId = characteristicId = ''
   return { statusCode: 200, data, err }
 }
@@ -206,7 +213,7 @@ BaseBleModule.getBLEDeviceServices = async (n = 0) => {
   }
   console.info('getBLEDeviceServices:', _data, err, n)
   if (!_data.services.length) return BaseBleModule.getBLEDeviceServices(n + 1)
-  let data = serviceId = mock.serviceId
+  let data = serviceId = BaseBleModule.serviceId = mock.serviceId
   return { statusCode: 200, data }
 }
 
@@ -227,7 +234,7 @@ BaseBleModule.getBLEDeviceCharacteristics = async (n = 0) => {
   }
   console.info('getBLEDeviceCharacteristics:', _data, err, n)
   if (!_data.characteristics.length) return BaseBleModule.getBLEDeviceCharacteristics(n + 1)
-  let data = characteristicId = mock.characteristicId
+  let data = characteristicId = BaseBleModule.characteristicId = mock.characteristicId
   return { statusCode: 200, data }
 }
 

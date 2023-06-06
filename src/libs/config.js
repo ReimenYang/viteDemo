@@ -1,15 +1,18 @@
 import project from '../projectConfig.js'
 const { mode, projectName, webDeveloper, framework } = project // dev开发环境、test测试环境、produce正式环境、demo演示环境、pre预发布环境
+
 let globalData = {}
 let apiServers = {}, host = {}
 switch (projectName) {
   case 'ECirculation':// 易循环
+  case 'sunshine':// 晨硕治疗仪
     apiServers = {
-      dev: 'http://consume.sspendi.com',
-      test: 'http://consume.sspendi.com',
-      produce: 'http://consume.sspendi.com'
+      dev: 'https://consume.sspendi.com',
+      test: 'https://consume.sspendi.com',
+      produce: 'https://consume.sspendi.com'
     }
     host.dev = 'http://' + webDeveloper
+    host.produce = 'https://health10.cn'
     break
   default:
     apiServers = {
@@ -63,6 +66,8 @@ const setting = {
       ECirculation: '8860', // 易循环
       limitDeviceAdmin: '8861', // 消费电子管理后台
       consume: '8862', // 优E康
+      ble: '8863', // ble智康
+      sunshine: '8864', // 晨硕治疗仪
       uniApp: '8001', // uniApp模板
       demo: '8000', // vue3模板
     },
@@ -95,6 +100,8 @@ const setting = {
     uniApp: 'uniApp', // uniApp模板
     demo: 'demo', // vue3模板
     ECirculation: 'ECirculation', // 易循环
+    ble: 'ble', // ble智康
+    sunshine: 'sunshine', // 晨硕治疗仪
     limitDeviceAdmin: 'limitDeviceAdmin', // 消费电子管理后台
     consume: 'consume', // 优E康
   },
@@ -145,5 +152,4 @@ const config = {
   urlPage: setting.buildPath(mode, projectName),
   globalData
 }
-
 export default config

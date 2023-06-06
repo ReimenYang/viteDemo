@@ -1,6 +1,8 @@
 // 系统启动后会对libs进行建全和直接引用的libs有所不同，因此init需要在启动系统后，uniapp启动前执行
 import Vue from 'vue'
+// #ifndef MP-WEIXIN
 import * as echarts from 'echarts'
+// #endif
 import libs from '@/libs'
 // import XnwLoading from '@/libs/components/state/loading/loading'
 // import XnwHeader from '@/libs/components/uniapp/box/header/header'
@@ -30,7 +32,9 @@ Vue.prototype.libs = libs
 Vue.prototype.request = libs.request
 Vue.prototype.api = libs.api
 Vue.prototype.globalData = libs.configProject.globalData
+// #ifndef MP-WEIXIN
 Vue.prototype.echarts = echarts
+// #endif
 
 Vue.mixin({
   async created () {
@@ -101,7 +105,7 @@ async function checkReady (n = 0) {
     } else {
       // 获取版本信息
       // let _visionInfo = (await libs.request(libs.api.ums.sysDict.getSysDict('updateAppConfig'))).data.find(item => item.label === projectName)
-      let visionInfo = (await libs.request({ url: 'https://static-ec34b204-8f78-4a39-8ebd-3c4b40bf1b0a.bspapp.com/updateAppConfig.json', method: 'GET' })).find(item => item.label === projectName)
+      let visionInfo = (await libs.request({ url: 'http://download.health10.cn/updateAppConfig.json', method: 'GET' })).find(item => item.label === projectName)
       console.log('获取版本信息', visionInfo)
       if (visionInfo) {
         // let updateAppConfig = JSON.parse(_visionInfo.description)
